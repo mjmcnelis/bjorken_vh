@@ -75,9 +75,9 @@ int main()
 
 	// initial time variable set to tau0, number of steps, stepsize
 	double tau = tau0;
-	const double dtau = 0.001;
+	const double dtau = 0.0001;
 	const int n = floor((tauf - tau0) / dtau);
-	const int timesteps_per_write = 10;
+	const int timesteps_per_write = 1;
 
 	// Data files for plots
 	ofstream eplot, piplot, bulkplot, plptplot;

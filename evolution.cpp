@@ -93,7 +93,8 @@ double dPi_dtau(double Ttt, double Ttx, double Tty, double Ttn, double pi, doubl
 	// first-order transport coefficients
 	double zetas = bulkViscosityToEntropyDensity(T);      // specific bulk viscosity
 	double zeta = s * zetas;						      // bulk viscosity
-	double tauPiInv = 15.0 * b2 * T / zetas;              // bulk relaxation rate
+	//double tauPiInv = 15.0 * b2 * T / zetas;            // bulk relaxation rate   (oh it should be b2*b2)
+	double tauPiInv = 15.0 * b2 * b2 * T / zetas;         // bulk relaxation rate
 
 	// second-order transport coefficients (*tauPiInv)
 	double deltaPiPi = 2.0 / 3.0;
