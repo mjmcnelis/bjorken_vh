@@ -451,16 +451,17 @@ double bulkViscosityToEntropyDensity(double T)
 
 		double x = T/Tpeak;
 
-		double result = a0 + a1*x + a2*x*x;
+		//double result = a0 + a1*x + a2*x*x;
+
+		double result;
 
 		if(x > 1.05)
-		{
 			result = lambda1*exp(-(x-1.0)/sigma1) + lambda2*exp(-(x-1.0)/sigma2) + 0.001;
-		}
 		else if(x < 0.995)
-		{
 			result = lambda3*exp((x-1.0)/sigma3)+ lambda4*exp((x-1.0)/sigma4) + 0.03;
-		}
+		else
+			result = a0 + a1*x + a2*x*x;
+
 		#ifndef CONSTANT_VISCOSITY
 			double zeta_norm = ZETA_NORM;
 			return zeta_norm * result;

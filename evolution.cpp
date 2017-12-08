@@ -24,6 +24,13 @@ using namespace std;
 
 double dTtt_dtau(double Ttt, double Ttx, double Tty, double Ttn, double pi, double Pi, double ut, double ux, double uy, double un, double e, double p, double tau)
 {
+
+	//double T = effectiveTemperature(e);
+	//double piNS = 4.0 * (e+p) / (3.0*T*tau) * shearViscosityToEntropyDensity(T);
+	//double PiNS = - (e+p) / (tau*T) * bulkViscosityToEntropyDensity(T);
+	//double Tnn = (e+p+PiNS)*un*un + (p+PiNS-piNS)/(tau*tau);
+
+
 	double Tnn = (e+p+Pi)*un*un + (p+Pi-pi)/(tau*tau);
 
 	double Tttdot = - (Ttt + tau*tau*Tnn) / tau;

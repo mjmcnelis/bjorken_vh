@@ -8,8 +8,8 @@
 //#define CONFORMAL_EOS // if using P_eq = e_eq / 3 or m = 0
 
 // ideal gas of massless quarks and gluons
-//#define EOS_FACTOR 15.6269   // Nc=3, Nf=3
-#define EOS_FACTOR 13.8997   // Nc=3, Nf=2.5
+#define EOS_FACTOR 15.6269   // Nc=3, Nf=3
+//#define EOS_FACTOR 13.8997   // Nc=3, Nf=2.5
 
 //#define CONSTANT_VISCOSITY
 #define CONSTANT_ETAS 0.095     // Brookhaven
