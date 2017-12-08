@@ -65,11 +65,6 @@ int main()
 	double Pi0 = - s0 * zetas0 / tau0;  // (Navier Stokes)
 	double Pi = 0.0*Pi0; // set to zero for now
 
-
-	double piNS = pi0;   // Navier Stokes propagation
-	double PiNS = Pi0;
-
-
 	// intermediate and end values for heun's rule
 	double Ttt_mid, Ttt_end;
 	double Ttx_mid, Ttx_end;
@@ -89,25 +84,25 @@ int main()
 
 	// Data files for plots
 	ofstream eplot, piplot, bulkplot, plptplot;
-	ofstream piNSplot, bulkNSplot, plptNSplot;
+	ofstream RpiInvplot, RbulkInvplot;
 
-	eplot.open("eplot.dat", ios::out);
-	piplot.open("piplot.dat", ios::out);
-	bulkplot.open("bulkplot.dat", ios::out);
-	plptplot.open("plptplot.dat", ios::out);
+	eplot.open("eplot_vh.dat", ios::out);
+	piplot.open("piplot_vh.dat", ios::out);
+	bulkplot.open("bulkplot_vh.dat", ios::out);
+	plptplot.open("plptplot_vh.dat", ios::out);
 
-	piNSplot.open("piNSplot.dat", ios::out);
-	bulkNSplot.open("bulkNSplot.dat", ios::out);
-	plptNSplot.open("plptNSplot.dat", ios::out);
+	RpiInvplot.open("RpiInvplot_vh.dat", ios::out);
+	RbulkInvplot.open("RbulkInvplot_vh.dat", ios::out);
+
 
 	eplot << "tau [fm]" << "\t\t" << "e/e0" << endl << setprecision(6) << tau << "\t\t" << e/e0 << endl;
 	piplot << "tau [fm]" << "\t\t" << "pi [fm^-4]" << endl << setprecision(6) << tau << "\t\t" << pi << endl;
 	bulkplot << "tau [fm]" << "\t\t" << "Pi [fm^-4]" << endl << setprecision(6) << tau << "\t\t" << Pi << endl;
 	plptplot << "tau [fm]" << "\t\t" << "PL/PT" << endl << setprecision(6) << tau << "\t\t" << (p + Pi - pi) / (p + Pi + 0.5*pi) << endl;
 
-	piNSplot << "tau [fm]" << "\t\t" << "piNS [fm^-4]" << endl << setprecision(6) << tau << "\t\t" << piNS << endl;
-	bulkNSplot << "tau [fm]" << "\t\t" << "PiNS [fm^-4]" << endl << setprecision(6) << tau << "\t\t" << PiNS << endl;
-	plptNSplot << "tau [fm]" << "\t\t" << "(PL/PT)_NS" << endl << setprecision(6) << tau << "\t\t" << (p + PiNS - piNS) / (p + PiNS + 0.5*piNS) << endl;
+	RpiInvplot << "tau [fm]" << "\t\t" << "R_pi^-1" << endl << setprecision(6) << tau << "\t\t" << 0.0 << endl;
+	RbulkInvplot << "tau [fm]" << "\t\t" << "R_Pi^-1" << endl << setprecision(6) << tau << "\t\t" << 0.0 << endl;
+
 
 
 
@@ -155,8 +150,8 @@ int main()
 
 		T = effectiveTemperature(e);
 
-		piNS = 4.0 * (e+p) / (3.0*T*tau) * shearViscosityToEntropyDensity(T);
-		PiNS = - (e+p) / (tau*T) * bulkViscosityToEntropyDensity(T);
+		//piNS = 4.0 * (e+p) / (3.0*T*tau) * shearViscosityToEntropyDensity(T);
+		//PiNS = - (e+p) / (tau*T) * bulkViscosityToEntropyDensity(T);
 
 
 		// write updated energy density to file
@@ -167,9 +162,9 @@ int main()
 			bulkplot << setprecision(6) << tau << "\t\t" << Pi << "\t\t" << endl;
 			plptplot << setprecision(6) << tau << "\t\t" << (p + Pi - pi) / (p + Pi + 0.5*pi) << "\t\t" << endl;
 
-			piNSplot << setprecision(6) << tau << "\t\t" << piNS << "\t\t" << endl;
-			bulkNSplot << setprecision(6) << tau << "\t\t" << PiNS << "\t\t" << endl;
-			plptNSplot << setprecision(6) << tau << "\t\t" << (p + PiNS - piNS) / (p + PiNS + 0.5*piNS) << "\t\t" << endl;
+			RpiInvplot << setprecision(6) << tau << "\t\t" << sqrt(1.5) * pi / p << "\t\t" << endl;
+			RbulkInvplot << setprecision(6) << tau << "\t\t" << Pi / p << "\t\t" << endl;
+
 		}
 	}
 
@@ -181,9 +176,9 @@ int main()
 	bulkplot.close();
 	plptplot.close();
 
-	piNSplot.close();
-	bulkNSplot.close();
-	plptNSplot.close();
+	RpiInvplot.close();
+	RbulkInvplot.close();
+
 
 
 
