@@ -59,8 +59,9 @@ double dpi_dtau(double Ttt, double Ttx, double Tty, double Ttn, double pi, doubl
 
 
 	// first-order transport coefficients
-	double eta = s * ETAS; 			     	     // shear viscosity
-	double taupiInv = 0.2 * T / ETAS;            // shear relaxation rate
+	double etas = shearViscosityToEntropyDensity(T);  // specific shear viscosity
+	double eta = s * etas;                        	  // shear viscosity
+	double taupiInv = 0.2 * T / etas;                 // shear relaxation rate
 
 
 	// second-order transport coefficients (*taupiInv)

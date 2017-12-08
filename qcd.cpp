@@ -2,7 +2,10 @@
 #include <math.h>
 #include <cmath>
 #include <stdlib.h>
+using namespace std;
+#include <iostream>
 #include "qcd.hpp"
+
 
 
 // lattice qcd quantities: expressions are rational polynomial fits to lattice data
@@ -425,45 +428,71 @@ double mdmdT_Quasiparticle(double T)
 
 
 // parameterization for specific bulk viscosity
-
-
-
-// I don't understand why I couldn't declare inline
 double bulkViscosityToEntropyDensity(double T)
 {
+	#ifndef CONFORMAL_EOS
+		double a0 = -13.45;
+		double a1 = 27.55;
+		double a2 = -13.77;
 
-	double a0 = -13.45;
-	double a1 = 27.55;
-	double a2 = -13.77;
+		double lambda1 = 0.9;
+		double lambda2 = 0.25;
+		double lambda3 = 0.9;
+		double lambda4 = 0.22;
 
-	double lambda1 = 0.9;
-	double lambda2 = 0.25;
-	double lambda3 = 0.9;
-	double lambda4 = 0.22;
+		double sigma1 = 0.025;
+		double sigma2 = 0.13;
+		double sigma3 = 0.0025;
+		double sigma4 = 0.022;
 
-	double sigma1 = 0.025;
-	double sigma2 = 0.13;
-	double sigma3 = 0.0025;
-	double sigma4 = 0.022;
+		double Tpeak = T_PEAK;
 
+		//cout << Tpeak << endl;
 
-	double x = T/1.01355; // it's some precise value for critical temperature?
+		double x = T/Tpeak;
 
-	double result = a0 + a1*x + a2*x*x;
+		double result = a0 + a1*x + a2*x*x;
 
-	if(x > 1.05)
-	{
-		result = lambda1*exp(-(x-1.0)/sigma1) + lambda2*exp(-(x-1.0)/sigma2) + 0.001;
-	}
-	else if(x < 0.995)
-	{
-		result = lambda3*exp((x-1.0)/sigma3)+ lambda4*exp((x-1.0)/sigma4) + 0.03;
-	}
-
-	return result;
+		if(x > 1.05)
+		{
+			result = lambda1*exp(-(x-1.0)/sigma1) + lambda2*exp(-(x-1.0)/sigma2) + 0.001;
+		}
+		else if(x < 0.995)
+		{
+			result = lambda3*exp((x-1.0)/sigma3)+ lambda4*exp((x-1.0)/sigma4) + 0.03;
+		}
+		#ifndef CONSTANT_VISCOSITY
+			double zeta_norm = ZETA_NORM;
+			return zeta_norm * result;
+		#else
+			return result;
+		#endif
+	#else
+		return 0.0;
+	#endif
 }
 
 
+double shearViscosityToEntropyDensity(double T)
+{
+	#ifndef CONSTANT_VISCOSITY
+		double etas_min = ETAS_MIN;
+		double etas_slope = ETAS_SLOPE;
+
+		double Tc = 0.154 * 5.067731;
+
+		double ans;
+
+		if(T > Tc)
+			ans = etas_min + etas_slope*(T-Tc);
+		else if(T <= Tc)
+			ans = etas_min;
+
+		return ans;
+	#else
+		return CONSTANT_ETAS;
+	#endif
+}
 
 
 

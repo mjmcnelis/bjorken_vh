@@ -24,7 +24,7 @@ int main()
 	// input parameters
 	const double T0 = 0.6 * GEV_TO_INVERSE_FM;  // initial temperature in fm^-1
 	const double tau0 = 0.25;					// initial time in fm
-	const double tauf = 20.0;					// final time in fm
+	const double tauf = 25.0;					// final time in fm
 
 
 
@@ -43,6 +43,7 @@ int main()
 
 	double s0 = (e0+p0)/T0; 						    // initial entropy density
 	double zetas0 = bulkViscosityToEntropyDensity(T0);  // initial specific bulk viscosity
+	double etas0 = shearViscosityToEntropyDensity(T0);  // initial specific shear viscosity
 
 
 	// initial Tt\mu components (units = [fm^-4])
@@ -53,8 +54,8 @@ int main()
 
 
 	// initial shear stress: pi = - tau^2 * pinn (units = [fm^-4])
-	double pi0 = 4.0 * s0 / (3.0 * tau0) * ETAS; // (Navier Stokes)
-	double pi = 0.0*pi0;
+	double pi0 = 4.0 * s0 / (3.0 * tau0) * etas0; // (Navier Stokes)
+	double pi = pi0;
 
 
 	// initial bulk pressure (units = [fm^-4])
@@ -75,9 +76,9 @@ int main()
 
 	// initial time variable set to tau0, number of steps, stepsize
 	double tau = tau0;
-	const double dtau = 0.0001;
+	const double dtau = 0.001;
 	const int n = floor((tauf - tau0) / dtau);
-	const int timesteps_per_write = 1;
+	const int timesteps_per_write = 10;
 
 	// Data files for plots
 	ofstream eplot, piplot, bulkplot, plptplot;
@@ -88,7 +89,7 @@ int main()
 	plptplot.open("plptplot.dat", ios::out);
 
 	eplot << "tau [fm]" << "\t\t" << "e/e0" << endl << setprecision(6) << tau << "\t\t" << 1.0 << endl;
-	piplot << "tau [fm]" << "\t\t" << "pi/p" << endl << setprecision(6) << tau << "\t\t" << 0.0 << endl;
+	piplot << "tau [fm]" << "\t\t" << "pi/p" << endl << setprecision(6) << tau << "\t\t" << pi << endl;
 	bulkplot << "tau [fm]" << "\t\t" << "Pi [Gev/fm^3]" << endl << setprecision(6) << tau << "\t\t" << Pi / GEV_TO_INVERSE_FM << endl;
 	plptplot << "tau [fm]" << "\t\t" << "PL/PT" << endl << setprecision(6) << tau << "\t\t" << (p + Pi - pi) / (p + Pi + 0.5*pi) << endl;
 
@@ -140,7 +141,7 @@ int main()
 		if((i+1)%timesteps_per_write == 0)
 		{
 			eplot << setprecision(6) << tau << "\t\t" << e / e0 << "\t\t" << endl;
-			piplot << setprecision(6) << tau << "\t\t" << pi / p0 << "\t\t" << endl;
+			piplot << setprecision(6) << tau << "\t\t" << pi / pi0 << "\t\t" << endl;
 			bulkplot << setprecision(6) << tau << "\t\t" << Pi / GEV_TO_INVERSE_FM << "\t\t" << endl;
 			plptplot << setprecision(6) << tau << "\t\t" << (p + Pi - pi) / (p + Pi + 0.5*pi) << "\t\t" << endl;
 		}
