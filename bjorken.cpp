@@ -147,7 +147,6 @@ int main()
 		// find inferred variables at new time step
 		get_inferred_variables(Ttt, Ttx, Tty, Ttn, pi, Pi, &ut, &ux, &uy, &un, &e, &p, tau);
 
-
 		T = effectiveTemperature(e);
 
 		//piNS = 4.0 * (e+p) / (3.0*T*tau) * shearViscosityToEntropyDensity(T);

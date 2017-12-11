@@ -449,7 +449,7 @@ double bulkViscosityToEntropyDensity(double T)
 
 		//cout << Tpeak << endl;
 
-		double x = T/Tpeak;
+		double x = T/T_PEAK;
 
 		//double result = a0 + a1*x + a2*x*x;
 
