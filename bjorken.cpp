@@ -12,6 +12,7 @@ using namespace std;
 #include "qcd.hpp"
 #include "evolution.hpp"
 #include "inferredvariables.hpp"
+#include "transport.hpp"
 //#include <gsl/gsl_sf.h>
 
 #define GEV_TO_INVERSE_FM 5.067731
@@ -21,14 +22,15 @@ int main()
 {
 	// Bjorken flow
 
+
 	// input parameters
 	const double T0 = 0.6 * GEV_TO_INVERSE_FM;  // initial temperature in fm^-1
 	const double tau0 = 0.25;					// initial time in fm
 	const double tauf = 30.0;					// final time in fm
 
 
+	// initialize temperature
 	double T = T0;
-
 
 
 	// initial flow profile
@@ -38,15 +40,26 @@ int main()
 	double un = 0.0;
 
 
-	// initial energy density and pressure  (units = [fm^-4])
+	// initialize energy density and pressure  (units = [fm^-4])
 	const double e0 = equilibriumEnergyDensity(T0);
 	double e = e0;
 	const double p0 = equilibriumPressure(e0);
 	double p = p0;
 
+
+	double cs2 = speedOfSoundSquared(e0);
+
+
 	double s0 = (e0+p0)/T0; 						    // initial entropy density
 	double zetas0 = bulkViscosityToEntropyDensity(T0);  // initial specific bulk viscosity
 	double etas0 = shearViscosityToEntropyDensity(T0);  // initial specific shear viscosity
+
+
+	double taupi = (s0*etas0) / beta_shear(T0);             // quasiparticle model
+	double taubulk = (s0*zetas0) / beta_bulk(T0);
+
+	//double taupi = (s0*etas0) / (0.2*(e0+p0));            // m/T << 1 fixed mass model
+	//double taubulk = (s0*zetas0) / (15.0*pow(1.0/3.0-cs2,2)*(e0+p0));
 
 
 	// initial Tt\mu components (units = [fm^-4])
@@ -56,14 +69,15 @@ int main()
 	double Ttn = 0.0;
 
 
-	// initial shear stress: pi = - tau^2 * pinn (units = [fm^-4])
+	// initialize shear stress: pi = - tau^2 * pinn (units = [fm^-4])
 	double pi0 = 4.0 * s0 / (3.0 * tau0) * etas0; // (Navier Stokes)
 	double pi = 0.0*pi0;
 
 
-	// initial bulk pressure (units = [fm^-4])
+	// initialize bulk pressure (units = [fm^-4])
 	double Pi0 = - s0 * zetas0 / tau0;  // (Navier Stokes)
 	double Pi = 0.0*Pi0; // set to zero for now
+
 
 	// intermediate and end values for heun's rule
 	double Ttt_mid, Ttt_end;
@@ -72,8 +86,6 @@ int main()
 	double Ttn_mid, Ttn_end;
 	double pi_mid, pi_end;
 	double Pi_mid, Pi_end;
-
-
 
 
 	// initial time variable set to tau0, number of steps, stepsize
@@ -85,6 +97,7 @@ int main()
 	// Data files for plots
 	ofstream eplot, piplot, bulkplot, plptplot;
 	ofstream RpiInvplot, RbulkInvplot;
+	ofstream taupiplot, taubulkplot;
 
 	eplot.open("eplot_vh.dat", ios::out);
 	piplot.open("piplot_vh.dat", ios::out);
@@ -93,6 +106,9 @@ int main()
 
 	RpiInvplot.open("RpiInvplot_vh.dat", ios::out);
 	RbulkInvplot.open("RbulkInvplot_vh.dat", ios::out);
+
+	taupiplot.open("taupiplot_vh.dat", ios::out);
+	taubulkplot.open("taubulkplot_vh.dat", ios::out);
 
 
 	eplot << "tau [fm]" << "\t\t" << "e/e0" << endl << setprecision(6) << tau << "\t\t" << e/e0 << endl;
@@ -103,6 +119,8 @@ int main()
 	RpiInvplot << "tau [fm]" << "\t\t" << "R_pi^-1" << endl << setprecision(6) << tau << "\t\t" << 0.0 << endl;
 	RbulkInvplot << "tau [fm]" << "\t\t" << "R_Pi^-1" << endl << setprecision(6) << tau << "\t\t" << 0.0 << endl;
 
+	taupiplot << "tau [fm]" << "\t\t" << "tau_pi" << endl << setprecision(6) << tau << "\t\t" << taupi << endl;
+	taubulkplot << "tau [fm]" << "\t\t" << "tau_Pi" << endl << setprecision(6) << tau << "\t\t" << taubulk << endl;
 
 
 
@@ -148,9 +166,20 @@ int main()
 		get_inferred_variables(Ttt, Ttx, Tty, Ttn, pi, Pi, &ut, &ux, &uy, &un, &e, &p, tau);
 
 		T = effectiveTemperature(e);
+		cs2 = speedOfSoundSquared(e);
 
 		//piNS = 4.0 * (e+p) / (3.0*T*tau) * shearViscosityToEntropyDensity(T);
 		//PiNS = - (e+p) / (tau*T) * bulkViscosityToEntropyDensity(T);
+
+
+		// quasiparticle model
+		taupi = (e+p) * shearViscosityToEntropyDensity(T) / (T*beta_shear(T));
+		taubulk = (e+p) * bulkViscosityToEntropyDensity(T) / (T*beta_bulk(T));
+
+
+		// m/T << 1 model
+		//taupi = 5.0 * shearViscosityToEntropyDensity(T) / T;
+		//taubulk = bulkViscosityToEntropyDensity(T) / (15.0*T*pow(1.0/3.0-cs2,2));
 
 
 		// write updated energy density to file
@@ -164,12 +193,16 @@ int main()
 			RpiInvplot << setprecision(6) << tau << "\t\t" << sqrt(1.5) * pi / p << "\t\t" << endl;
 			RbulkInvplot << setprecision(6) << tau << "\t\t" << Pi / p << "\t\t" << endl;
 
+			taupiplot << setprecision(6) << tau << "\t\t" << taupi << "\t\t" << endl;
+			taubulkplot << setprecision(6) << tau << "\t\t" << taubulk  << "\t\t" << endl;
+
 		}
 	}
 
 
 
 	// close plot data files
+
 	eplot.close();
 	piplot.close();
 	bulkplot.close();
@@ -177,6 +210,9 @@ int main()
 
 	RpiInvplot.close();
 	RbulkInvplot.close();
+
+	taupiplot.close();
+	taubulkplot.close();
 
 
 

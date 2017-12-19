@@ -12,11 +12,11 @@
 //#define EOS_FACTOR 13.8997   // Nc=3, Nf=2.5
 
 //#define CONSTANT_VISCOSITY
-#define CONSTANT_ETAS 0.095            // Brookhaven
+#define CONSTANT_ETAS 0.08            // Brookhaven
 #define ETAS_MIN 0.08
 #define ETAS_SLOPE (0.85 / 5.067731)   // Duke
 #define ZETA_NORM 1.25
-#define T_PEAK (0.180 * 5.067731)
+#define T_PEAK (0.18 * 5.067731)
 
 
 double equilibriumPressure(double e);
