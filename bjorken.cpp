@@ -26,7 +26,7 @@ int main()
 	// input parameters
 	const double T0 = 0.6 * GEV_TO_INVERSE_FM;  // initial temperature in fm^-1
 	const double tau0 = 0.25;					// initial time in fm
-	const double tauf = 30.0;					// final time in fm
+	const double tauf = 50.0;					// final time in fm
 
 
 	// initialize temperature
@@ -58,6 +58,9 @@ int main()
 	double taupi = (s0*etas0) / beta_shear(T0);             // quasiparticle model
 	double taubulk = (s0*zetas0) / beta_bulk(T0);
 
+	cout << sqrt(1.5)*taupi/tau0 << endl;
+	cout << taubulk/tau0 << endl;
+
 	//double taupi = (s0*etas0) / (0.2*(e0+p0));            // m/T << 1 fixed mass model
 	//double taubulk = (s0*zetas0) / (15.0*pow(1.0/3.0-cs2,2)*(e0+p0));
 
@@ -68,15 +71,21 @@ int main()
 	double Tty = 0.0;
 	double Ttn = 0.0;
 
-
 	// initialize shear stress: pi = - tau^2 * pinn (units = [fm^-4])
 	double pi0 = 4.0 * s0 / (3.0 * tau0) * etas0; // (Navier Stokes)
 	double pi = 0.0*pi0;
 
-
 	// initialize bulk pressure (units = [fm^-4])
 	double Pi0 = - s0 * zetas0 / tau0;  // (Navier Stokes)
 	double Pi = 0.0*Pi0; // set to zero for now
+
+
+// Glasma initial conditions:
+
+	double PL = 0.00149925 * p;
+	double PT = 1.49925 * p;
+	pi = 2.0*(PT-PL)/3.0;
+	Pi = (2.0*PT/3.0 + PL/3.0 - p);
 
 
 	// intermediate and end values for heun's rule
@@ -116,8 +125,8 @@ int main()
 	bulkplot << "tau [fm]" << "\t\t" << "Pi [fm^-4]" << endl << setprecision(6) << tau << "\t\t" << Pi << endl;
 	plptplot << "tau [fm]" << "\t\t" << "PL/PT" << endl << setprecision(6) << tau << "\t\t" << (p + Pi - pi) / (p + Pi + 0.5*pi) << endl;
 
-	RpiInvplot << "tau [fm]" << "\t\t" << "R_pi^-1" << endl << setprecision(6) << tau << "\t\t" << 0.0 << endl;
-	RbulkInvplot << "tau [fm]" << "\t\t" << "R_Pi^-1" << endl << setprecision(6) << tau << "\t\t" << 0.0 << endl;
+	RpiInvplot << "tau [fm]" << "\t\t" << "R_pi^-1" << endl << setprecision(6) << tau << "\t\t" << sqrt(1.5) * pi / p << endl;
+	RbulkInvplot << "tau [fm]" << "\t\t" << "R_Pi^-1" << endl << setprecision(6) << tau << "\t\t" << Pi / p << endl;
 
 	taupiplot << "tau [fm]" << "\t\t" << "tau_pi" << endl << setprecision(6) << tau << "\t\t" << taupi << endl;
 	taubulkplot << "tau [fm]" << "\t\t" << "tau_Pi" << endl << setprecision(6) << tau << "\t\t" << taubulk << endl;
