@@ -54,15 +54,16 @@ int main()
 	double zetas0 = bulkViscosityToEntropyDensity(T0);  // initial specific bulk viscosity
 	double etas0 = shearViscosityToEntropyDensity(T0);  // initial specific shear viscosity
 
-
-	double taupi = (s0*etas0) / beta_shear(T0);             // quasiparticle model
+	 // quasiparticle model
+	double taupi = (s0*etas0) / beta_shear(T0);
 	double taubulk = (s0*zetas0) / beta_bulk(T0);
 
-	cout << sqrt(1.5)*taupi/tau0 << endl;
-	cout << taubulk/tau0 << endl;
+	// m/T << 1 fixed mass model
+	// double taupi = 5.0 * shearViscosityToEntropyDensity(T0) / T0;
+	// double taubulk = bulkViscosityToEntropyDensity(T0) / (15.0*T0*pow(1.0/3.0-cs2,2));
 
-	//double taupi = (s0*etas0) / (0.2*(e0+p0));            // m/T << 1 fixed mass model
-	//double taubulk = (s0*zetas0) / (15.0*pow(1.0/3.0-cs2,2)*(e0+p0));
+	//cout << sqrt(1.5)*taupi/tau0 << endl;
+	//cout << taubulk/tau0 << endl;
 
 
 	// initial Tt\mu components (units = [fm^-4])
@@ -82,10 +83,10 @@ int main()
 
 // Glasma initial conditions:
 
-	double PL = 0.00149925 * p;
-	double PT = 1.49925 * p;
-	pi = 2.0*(PT-PL)/3.0;
-	Pi = (2.0*PT/3.0 + PL/3.0 - p);
+	// double PL = 0.014925 * e / 3.0;
+	// double PT = 1.4925 * e / 3.0;
+	// pi = 2.0*(PT-PL)/3.0;
+	// Pi = (2.0*PT/3.0 + PL/3.0 - p);
 
 
 	// intermediate and end values for heun's rule
@@ -187,8 +188,8 @@ int main()
 
 
 		// m/T << 1 model
-		//taupi = 5.0 * shearViscosityToEntropyDensity(T) / T;
-		//taubulk = bulkViscosityToEntropyDensity(T) / (15.0*T*pow(1.0/3.0-cs2,2));
+		// taupi = 5.0 * shearViscosityToEntropyDensity(T) / T;
+		// taubulk = bulkViscosityToEntropyDensity(T) / (15.0*T*pow(1.0/3.0-cs2,2));
 
 
 		// write updated energy density to file

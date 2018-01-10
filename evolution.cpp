@@ -114,7 +114,7 @@ double dPi_dtau(double Ttt, double Ttx, double Tty, double Ttn, double pi, doubl
 	// double deltaPiPi = 2.0 / 3.0;
 	// double lambdaPipi = 1.6 * b2;
 
-	double taupiInv = beta_shear(T)/eta;
+	//double taupiInv = beta_shear(T)/eta;
 
 	// Model 2: quasiparticle model
 	double tauPiInv = beta_bulk(T)/zeta;
