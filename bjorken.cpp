@@ -24,9 +24,9 @@ int main()
 
 
 	// input parameters
-	const double T0 = 0.6 * GEV_TO_INVERSE_FM;  // initial temperature in fm^-1
+	const double T0 = 0.25 * GEV_TO_INVERSE_FM;  // initial temperature in fm^-1
 	const double tau0 = 0.25;					// initial time in fm
-	const double tauf = 50.0;					// final time in fm
+	const double tauf = 100.0;					// final time in fm
 
 
 	// initialize temperature
@@ -55,12 +55,12 @@ int main()
 	double etas0 = shearViscosityToEntropyDensity(T0);  // initial specific shear viscosity
 
 	 // quasiparticle model
-	double taupi = (s0*etas0) / beta_shear(T0);
-	double taubulk = (s0*zetas0) / beta_bulk(T0);
+	// double taupi = (s0*etas0) / beta_shear(T0);
+	// double taubulk = (s0*zetas0) / beta_bulk(T0);
 
 	// m/T << 1 fixed mass model
-	// double taupi = 5.0 * shearViscosityToEntropyDensity(T0) / T0;
-	// double taubulk = bulkViscosityToEntropyDensity(T0) / (15.0*T0*pow(1.0/3.0-cs2,2));
+	double taupi = 5.0 * shearViscosityToEntropyDensity(T0) / T0;
+	double taubulk = bulkViscosityToEntropyDensity(T0) / (15.0*T0*pow(1.0/3.0-cs2,2));
 
 	//cout << sqrt(1.5)*taupi/tau0 << endl;
 	//cout << taubulk/tau0 << endl;
@@ -74,11 +74,14 @@ int main()
 
 	// initialize shear stress: pi = - tau^2 * pinn (units = [fm^-4])
 	double pi0 = 4.0 * s0 / (3.0 * tau0) * etas0; // (Navier Stokes)
-	double pi = 0.0*pi0;
+	double pi = 0.0;
 
 	// initialize bulk pressure (units = [fm^-4])
-	double Pi0 = - s0 * zetas0 / tau0;  // (Navier Stokes)
-	double Pi = 0.0*Pi0; // set to zero for now
+	double bulk0 = - s0 * zetas0 / tau0;  // (Navier Stokes)
+	double Pi = 0.0; // set to zero for now
+
+	double piNS = pi0;
+	double bulkNS = bulk0;
 
 
 // Glasma initial conditions:
@@ -87,6 +90,12 @@ int main()
 	// double PT = 1.4925 * e / 3.0;
 	// pi = 2.0*(PT-PL)/3.0;
 	// Pi = (2.0*PT/3.0 + PL/3.0 - p);
+
+	double Beq = equilibriumBquasi(T);
+
+	double dB2nd = -3.0*taubulk*mdmdT_Quasiparticle(T)/pow(z_Quasiparticle(T),2)*cs2*Pi/(tau0*T);
+
+	double B = Beq + dB2nd;
 
 
 	// intermediate and end values for heun's rule
@@ -100,7 +109,7 @@ int main()
 
 	// initial time variable set to tau0, number of steps, stepsize
 	double tau = tau0;
-	const double dtau = 0.001;
+	const double dtau = 0.0005;
 	const int n = floor((tauf - tau0) / dtau);
 	const int timesteps_per_write = 10;
 
@@ -108,17 +117,25 @@ int main()
 	ofstream eplot, piplot, bulkplot, plptplot;
 	ofstream RpiInvplot, RbulkInvplot;
 	ofstream taupiplot, taubulkplot;
+	ofstream Bplot, dB2ndplot;
+	ofstream piNSplot, bulkNSplot;
 
-	eplot.open("eplot_vh.dat", ios::out);
-	piplot.open("piplot_vh.dat", ios::out);
-	bulkplot.open("bulkplot_vh.dat", ios::out);
-	plptplot.open("plptplot_vh.dat", ios::out);
+	eplot.open("eplot_vh2.dat", ios::out);
+	piplot.open("piplot_vh2.dat", ios::out);
+	bulkplot.open("bulkplot_vh2.dat", ios::out);
+	plptplot.open("plptplot_vh2.dat", ios::out);
 
-	RpiInvplot.open("RpiInvplot_vh.dat", ios::out);
-	RbulkInvplot.open("RbulkInvplot_vh.dat", ios::out);
+	RpiInvplot.open("RpiInvplot_vh2.dat", ios::out);
+	RbulkInvplot.open("RbulkInvplot_vh2.dat", ios::out);
 
-	taupiplot.open("taupiplot_vh.dat", ios::out);
-	taubulkplot.open("taubulkplot_vh.dat", ios::out);
+	taupiplot.open("taupiplot_vh2.dat", ios::out);
+	taubulkplot.open("taubulkplot_vh2.dat", ios::out);
+
+	Bplot.open("Bplot_vh2.dat", ios::out);
+	dB2ndplot.open("dB2ndplot_vh2.dat", ios::out);
+
+	piNSplot.open("piNSplot_vh2.dat", ios::out);
+	bulkNSplot.open("bulkNSplot_vh2.dat", ios::out);
 
 
 	eplot << "tau [fm]" << "\t\t" << "e/e0" << endl << setprecision(6) << tau << "\t\t" << e/e0 << endl;
@@ -132,6 +149,12 @@ int main()
 	taupiplot << "tau [fm]" << "\t\t" << "tau_pi" << endl << setprecision(6) << tau << "\t\t" << taupi << endl;
 	taubulkplot << "tau [fm]" << "\t\t" << "tau_Pi" << endl << setprecision(6) << tau << "\t\t" << taubulk << endl;
 
+	Bplot << "tau [fm]" << "\t\t" << "B" << endl << setprecision(6) << tau << "\t\t" << B << endl;
+	dB2ndplot << "tau [fm]" << "\t\t" << "dB_2nd" << endl << setprecision(6) << tau << "\t\t" << dB2nd << endl;
+
+	piNSplot << "tau [fm]" << "\t\t" << "R_piNS^-1" << endl << setprecision(6) << tau << "\t\t" << sqrt(1.5) * piNS / p << endl;
+
+	bulkNSplot << "tau [fm]" << "\t\t" << "R_PiNS^-1" << endl << setprecision(6) << tau << "\t\t" << bulkNS / p << endl;
 
 
 	// start evolution
@@ -178,18 +201,24 @@ int main()
 		T = effectiveTemperature(e);
 		cs2 = speedOfSoundSquared(e);
 
-		//piNS = 4.0 * (e+p) / (3.0*T*tau) * shearViscosityToEntropyDensity(T);
-		//PiNS = - (e+p) / (tau*T) * bulkViscosityToEntropyDensity(T);
+		piNS = 4.0 * (e+p) / (3.0*T*tau) * shearViscosityToEntropyDensity(T);
+		bulkNS = - (e+p) / (tau*T) * bulkViscosityToEntropyDensity(T);
 
 
 		// quasiparticle model
-		taupi = (e+p) * shearViscosityToEntropyDensity(T) / (T*beta_shear(T));
-		taubulk = (e+p) * bulkViscosityToEntropyDensity(T) / (T*beta_bulk(T));
+		// taupi = (e+p) * shearViscosityToEntropyDensity(T) / (T*beta_shear(T));
+		// taubulk = (e+p) * bulkViscosityToEntropyDensity(T) / (T*beta_bulk(T));
 
 
 		// m/T << 1 model
-		// taupi = 5.0 * shearViscosityToEntropyDensity(T) / T;
-		// taubulk = bulkViscosityToEntropyDensity(T) / (15.0*T*pow(1.0/3.0-cs2,2));
+		taupi = 5.0 * shearViscosityToEntropyDensity(T) / T;
+		taubulk = bulkViscosityToEntropyDensity(T) / (15.0*T*pow(1.0/3.0-cs2,2));
+
+		Beq = equilibriumBquasi(T);
+
+		dB2nd = -3.0*taubulk*mdmdT_Quasiparticle(T)/pow(z_Quasiparticle(T),2)*cs2*Pi/(tau*T);
+
+		B = Beq + dB2nd;
 
 
 		// write updated energy density to file
@@ -205,6 +234,12 @@ int main()
 
 			taupiplot << setprecision(6) << tau << "\t\t" << taupi << "\t\t" << endl;
 			taubulkplot << setprecision(6) << tau << "\t\t" << taubulk  << "\t\t" << endl;
+
+			Bplot << setprecision(6) << tau << "\t\t" << B << "\t\t" << endl;
+			dB2ndplot << setprecision(6) << tau << "\t\t" << dB2nd << "\t\t" << endl;
+
+			piNSplot << setprecision(6) << tau << "\t\t" << sqrt(1.5) * piNS / p << endl;
+			bulkNSplot << setprecision(6) << tau << "\t\t" << bulkNS / p << endl;
 
 		}
 	}
@@ -223,6 +258,13 @@ int main()
 
 	taupiplot.close();
 	taubulkplot.close();
+
+	Bplot.close();
+	dB2ndplot.close();
+
+
+	piNSplot.close();
+	bulkNSplot.close();
 
 
 
