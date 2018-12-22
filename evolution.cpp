@@ -69,17 +69,17 @@ double dpi_dtau(double Ttt, double Ttx, double Tty, double Ttn, double pi, doubl
 	double eta = s * etas;                        	  // shear viscosity
 
 	// Model 1: fixed mass and m/T << 1
-	double taupiInv = 0.2 * T / etas;                // shear relaxation rate
-	double taupipi = 10.0 / 7.0;
-	double deltapipi = 4.0 / 3.0;
-	double lambdapiPi = 1.2;
+	// double taupiInv = 0.2 * T / etas;                // shear relaxation rate
+	// double taupipi = 10.0 / 7.0;
+	// double deltapipi = 4.0 / 3.0;
+	// double lambdapiPi = 1.2;
 
 
 	// Model 2: quasiparticle model
-	// double taupiInv = beta_shear(T)/eta;
-	// double taupipi = tauSS(T);
-	// double deltapipi = deltaSS(T);
-	// double lambdapiPi = lambdaSB(T);
+	double taupiInv = beta_shear(T)/eta;
+	double taupipi = tauSS(T);
+	double deltapipi = deltaSS(T);
+	double lambdapiPi = lambdaSB(T);
 
 
 	// shear stress relaxation equation
@@ -110,16 +110,16 @@ double dPi_dtau(double Ttt, double Ttx, double Tty, double Ttn, double pi, doubl
 	double zeta = s * zetas;						      // bulk viscosity
 
 	// Model 1: fixed mass and m/T << 1
-	double tauPiInv = 15.0 * b2 * b2 * T / zetas;      // bulk relaxation rate
-	double deltaPiPi = 2.0 / 3.0;
-	double lambdaPipi = 1.6 * b2;
+	// double tauPiInv = 15.0 * b2 * b2 * T / zetas;      // bulk relaxation rate
+	// double deltaPiPi = 2.0 / 3.0;
+	// double lambdaPipi = 1.6 * b2;
 
 	//double taupiInv = beta_shear(T)/eta;
 
 	// Model 2: quasiparticle model
-	// double tauPiInv = beta_bulk(T)/zeta;
-	// double deltaPiPi = deltaBB(T);
-	// double lambdaPipi = lambdaBS(T);
+	double tauPiInv = beta_bulk(T)/zeta;
+	double deltaPiPi = deltaBB(T);
+	double lambdaPipi = lambdaBS(T);
 
 	// bulk relaxation equation
 	double Pidot = -tauPiInv * (Pi + zeta/tau) + (-deltaPiPi*Pi + lambdaPipi*pi) / tau;

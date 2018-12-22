@@ -22,9 +22,16 @@ int main()
 {
 	// Bjorken flow
 
+	//string alphabet = "abcdefghijklmnopqrstuvwxyz";
+  	//cout << alphabet.find("a") << endl;     // a is at 0
+  	//cout << alphabet.find("e") << endl;     // e is at 4
+  	//cout << alphabet.substr(0,4) << endl;
+
+	//exit(-1);
+
 
 	// input parameters
-	const double T0 = 0.25 * GEV_TO_INVERSE_FM;  // initial temperature in fm^-1
+	const double T0 = 0.5 * GEV_TO_INVERSE_FM;  // initial temperature in fm^-1
 	const double tau0 = 0.25;					// initial time in fm
 	const double tauf = 100.0;					// final time in fm
 
@@ -55,12 +62,12 @@ int main()
 	double etas0 = shearViscosityToEntropyDensity(T0);  // initial specific shear viscosity
 
 	 // quasiparticle model
-	// double taupi = (s0*etas0) / beta_shear(T0);
-	// double taubulk = (s0*zetas0) / beta_bulk(T0);
+	double taupi = (s0*etas0) / beta_shear(T0);
+	double taubulk = (s0*zetas0) / beta_bulk(T0);
 
 	// m/T << 1 fixed mass model
-	double taupi = 5.0 * shearViscosityToEntropyDensity(T0) / T0;
-	double taubulk = bulkViscosityToEntropyDensity(T0) / (15.0*T0*pow(1.0/3.0-cs2,2));
+	//double taupi = 5.0 * shearViscosityToEntropyDensity(T0) / T0;
+	//double taubulk = bulkViscosityToEntropyDensity(T0) / (15.0*T0*pow(1.0/3.0-cs2,2));
 
 	//cout << sqrt(1.5)*taupi/tau0 << endl;
 	//cout << taubulk/tau0 << endl;
@@ -109,7 +116,7 @@ int main()
 
 	// initial time variable set to tau0, number of steps, stepsize
 	double tau = tau0;
-	const double dtau = 0.0005;
+	const double dtau = 0.01;
 	const int n = floor((tauf - tau0) / dtau);
 	const int timesteps_per_write = 10;
 
@@ -119,11 +126,12 @@ int main()
 	ofstream taupiplot, taubulkplot;
 	ofstream Bplot, dB2ndplot;
 	ofstream piNSplot, bulkNSplot;
+	ofstream tanhrhoplot;
 
 	eplot.open("eplot_vh2.dat", ios::out);
 	piplot.open("piplot_vh2.dat", ios::out);
 	bulkplot.open("bulkplot_vh2.dat", ios::out);
-	plptplot.open("plptplot_vh2.dat", ios::out);
+	plptplot.open("plptplot_vh_reg.dat", ios::out);
 
 	RpiInvplot.open("RpiInvplot_vh2.dat", ios::out);
 	RbulkInvplot.open("RbulkInvplot_vh2.dat", ios::out);
@@ -136,6 +144,8 @@ int main()
 
 	piNSplot.open("piNSplot_vh2.dat", ios::out);
 	bulkNSplot.open("bulkNSplot_vh2.dat", ios::out);
+
+	tanhrhoplot.open("tanhrhoplot_vh2.dat", ios::out);
 
 
 	eplot << "tau [fm]" << "\t\t" << "e/e0" << endl << setprecision(6) << tau << "\t\t" << e/e0 << endl;
@@ -157,6 +167,17 @@ int main()
 	bulkNSplot << "tau [fm]" << "\t\t" << "R_PiNS^-1" << endl << setprecision(6) << tau << "\t\t" << bulkNS / p << endl;
 
 
+	double rho = sqrt(1.5) * fabs(pi) / sqrt(e*e + 3.0*p*p);
+	double reg;
+
+	if(rho >= 0.01)
+	{
+		reg = tanh(rho) / rho;
+	}
+	else reg = 1.0;
+
+	tanhrhoplot << "tau [fm]" << "\t\t" << "tanhrho_rho" << endl << setprecision(6) << tau << "\t\t" << reg << endl;
+
 	// start evolution
 	for(int i = 0; i < n; i++)
 	{
@@ -171,6 +192,22 @@ int main()
 
 		// find intermediate inferred variables
 		get_inferred_variables(Ttt_mid, Ttx_mid, Tty_mid, Ttn_mid, pi_mid, Pi_mid, &ut, &ux, &uy, &un, &e, &p, tau + dtau);
+
+
+		// regulate the shear stress
+
+		double rho0 = 1.0;
+
+		double rho = sqrt(1.5) * fabs(pi_mid) / sqrt(e*e + 3.0*p*p) / rho0;
+		double reg;
+
+		if(rho >= 0.01)
+		{
+			reg = tanh(rho) / rho;
+		}
+		else reg = 1.0;
+
+		pi_mid *= reg;
 
 
 		// add Euler step with respect to the intermediate value
@@ -201,18 +238,32 @@ int main()
 		T = effectiveTemperature(e);
 		cs2 = speedOfSoundSquared(e);
 
+
+		// regulate the shear stress
+
+		rho = sqrt(1.5) * fabs(pi) / sqrt(e*e + 3.0*p*p) / rho0;
+
+		if(rho >= 0.01)
+		{
+			reg = tanh(rho) / rho;
+		}
+		else reg = 1.0;
+
+		pi *= reg;
+
+
 		piNS = 4.0 * (e+p) / (3.0*T*tau) * shearViscosityToEntropyDensity(T);
 		bulkNS = - (e+p) / (tau*T) * bulkViscosityToEntropyDensity(T);
 
 
 		// quasiparticle model
-		// taupi = (e+p) * shearViscosityToEntropyDensity(T) / (T*beta_shear(T));
-		// taubulk = (e+p) * bulkViscosityToEntropyDensity(T) / (T*beta_bulk(T));
+		taupi = (e+p) * shearViscosityToEntropyDensity(T) / (T*beta_shear(T));
+		taubulk = (e+p) * bulkViscosityToEntropyDensity(T) / (T*beta_bulk(T));
 
 
 		// m/T << 1 model
-		taupi = 5.0 * shearViscosityToEntropyDensity(T) / T;
-		taubulk = bulkViscosityToEntropyDensity(T) / (15.0*T*pow(1.0/3.0-cs2,2));
+		//taupi = 5.0 * shearViscosityToEntropyDensity(T) / T;
+		//taubulk = bulkViscosityToEntropyDensity(T) / (15.0*T*pow(1.0/3.0-cs2,2));
 
 		Beq = equilibriumBquasi(T);
 
@@ -241,6 +292,8 @@ int main()
 			piNSplot << setprecision(6) << tau << "\t\t" << sqrt(1.5) * piNS / p << endl;
 			bulkNSplot << setprecision(6) << tau << "\t\t" << bulkNS / p << endl;
 
+			tanhrhoplot << setprecision(6) << tau << "\t\t" << reg << endl;
+
 		}
 	}
 
@@ -265,6 +318,7 @@ int main()
 
 	piNSplot.close();
 	bulkNSplot.close();
+	tanhrhoplot.close();
 
 
 
