@@ -13,23 +13,14 @@ using namespace std;
 #include "evolution.hpp"
 #include "inferredvariables.hpp"
 #include "transport.hpp"
-//#include <gsl/gsl_sf.h>
 
 #define GEV_TO_INVERSE_FM 5.067731
 
+#define GLASMA 0								// 0 = equilibrium initial conditions
+#define KINETIC 0								// 0 = standard, 1 = quasiparticle
 
 int main()
 {
-	// Bjorken flow
-
-	//string alphabet = "abcdefghijklmnopqrstuvwxyz";
-  	//cout << alphabet.find("a") << endl;     // a is at 0
-  	//cout << alphabet.find("e") << endl;     // e is at 4
-  	//cout << alphabet.substr(0,4) << endl;
-
-	//exit(-1);
-
-
 	// input parameters
 	const double T0 = 0.5 * GEV_TO_INVERSE_FM;  // initial temperature in fm^-1
 	const double tau0 = 0.25;					// initial time in fm
@@ -53,25 +44,19 @@ int main()
 	const double p0 = equilibriumPressure(e0);
 	double p = p0;
 
-
 	double cs2 = speedOfSoundSquared(e0);
-
 
 	double s0 = (e0+p0)/T0; 						    // initial entropy density
 	double zetas0 = bulkViscosityToEntropyDensity(T0);  // initial specific bulk viscosity
 	double etas0 = shearViscosityToEntropyDensity(T0);  // initial specific shear viscosity
 
-	 // quasiparticle model
+#if (KINETIC == 1)										// quasiparticle model
 	double taupi = (s0*etas0) / beta_shear(T0);
 	double taubulk = (s0*zetas0) / beta_bulk(T0);
-
-	// m/T << 1 fixed mass model
-	//double taupi = 5.0 * shearViscosityToEntropyDensity(T0) / T0;
-	//double taubulk = bulkViscosityToEntropyDensity(T0) / (15.0*T0*pow(1.0/3.0-cs2,2));
-
-	//cout << sqrt(1.5)*taupi/tau0 << endl;
-	//cout << taubulk/tau0 << endl;
-
+#else 													// m/T << 1 fixed mass model
+	double taupi = 5.0 * shearViscosityToEntropyDensity(T0) / T0;
+	double taubulk = bulkViscosityToEntropyDensity(T0) / (15.0*T0*pow(1.0/3.0-cs2,2));
+#endif
 
 	// initial Tt\mu components (units = [fm^-4])
 	double Ttt = e0;
@@ -90,13 +75,12 @@ int main()
 	double piNS = pi0;
 	double bulkNS = bulk0;
 
-
-// Glasma initial conditions:
-
-	// double PL = 0.014925 * e / 3.0;
-	// double PT = 1.4925 * e / 3.0;
-	// pi = 2.0*(PT-PL)/3.0;
-	// Pi = (2.0*PT/3.0 + PL/3.0 - p);
+#if (GLASMA == 1)
+	double PL = 0.014925 * e / 3.0;
+	double PT = 1.4925 * e / 3.0;
+	pi = 2.0*(PT-PL)/3.0;
+	Pi = (2.0*PT/3.0 + PL/3.0 - p);
+#endif
 
 	double Beq = equilibriumBquasi(T);
 
@@ -128,24 +112,22 @@ int main()
 	ofstream piNSplot, bulkNSplot;
 	ofstream tanhrhoplot;
 
-	eplot.open("eplot_vh2.dat", ios::out);
-	piplot.open("piplot_vh2.dat", ios::out);
-	bulkplot.open("bulkplot_vh2.dat", ios::out);
-	plptplot.open("plptplot_vh_reg.dat", ios::out);
+	eplot.open("results/eplot.dat", ios::out);
+	piplot.open("results/piplot.dat", ios::out);
+	bulkplot.open("results/bulkplot.dat", ios::out);
+	plptplot.open("results/plptplot.dat", ios::out);
 
-	RpiInvplot.open("RpiInvplot_vh2.dat", ios::out);
-	RbulkInvplot.open("RbulkInvplot_vh2.dat", ios::out);
+	RpiInvplot.open("results/RpiInvplot.dat", ios::out);
+	RbulkInvplot.open("results/RbulkInvplot.dat", ios::out);
 
-	taupiplot.open("taupiplot_vh2.dat", ios::out);
-	taubulkplot.open("taubulkplot_vh2.dat", ios::out);
+	taupiplot.open("results/taupiplot.dat", ios::out);
+	taubulkplot.open("results/taubulkplot.dat", ios::out);
 
-	Bplot.open("Bplot_vh2.dat", ios::out);
-	dB2ndplot.open("dB2ndplot_vh2.dat", ios::out);
+	Bplot.open("results/Bplot.dat", ios::out);
+	dB2ndplot.open("results/dB2ndplot.dat", ios::out);
 
-	piNSplot.open("piNSplot_vh2.dat", ios::out);
-	bulkNSplot.open("bulkNSplot_vh2.dat", ios::out);
-
-	tanhrhoplot.open("tanhrhoplot_vh2.dat", ios::out);
+	piNSplot.open("results/piNSplot.dat", ios::out);
+	bulkNSplot.open("results/bulkNSplot.dat", ios::out);
 
 
 	eplot << "tau [fm]" << "\t\t" << "e/e0" << endl << setprecision(6) << tau << "\t\t" << e/e0 << endl;
@@ -167,17 +149,6 @@ int main()
 	bulkNSplot << "tau [fm]" << "\t\t" << "R_PiNS^-1" << endl << setprecision(6) << tau << "\t\t" << bulkNS / p << endl;
 
 
-	double rho = sqrt(1.5) * fabs(pi) / sqrt(e*e + 3.0*p*p);
-	double reg;
-
-	if(rho >= 0.01)
-	{
-		reg = tanh(rho) / rho;
-	}
-	else reg = 1.0;
-
-	tanhrhoplot << "tau [fm]" << "\t\t" << "tanhrho_rho" << endl << setprecision(6) << tau << "\t\t" << reg << endl;
-
 	// start evolution
 	for(int i = 0; i < n; i++)
 	{
@@ -192,22 +163,6 @@ int main()
 
 		// find intermediate inferred variables
 		get_inferred_variables(Ttt_mid, Ttx_mid, Tty_mid, Ttn_mid, pi_mid, Pi_mid, &ut, &ux, &uy, &un, &e, &p, tau + dtau);
-
-
-		// regulate the shear stress
-
-		double rho0 = 1.0;
-
-		double rho = sqrt(1.5) * fabs(pi_mid) / sqrt(e*e + 3.0*p*p) / rho0;
-		double reg;
-
-		if(rho >= 0.01)
-		{
-			reg = tanh(rho) / rho;
-		}
-		else reg = 1.0;
-
-		pi_mid *= reg;
 
 
 		// add Euler step with respect to the intermediate value
@@ -239,31 +194,17 @@ int main()
 		cs2 = speedOfSoundSquared(e);
 
 
-		// regulate the shear stress
-
-		rho = sqrt(1.5) * fabs(pi) / sqrt(e*e + 3.0*p*p) / rho0;
-
-		if(rho >= 0.01)
-		{
-			reg = tanh(rho) / rho;
-		}
-		else reg = 1.0;
-
-		pi *= reg;
-
-
 		piNS = 4.0 * (e+p) / (3.0*T*tau) * shearViscosityToEntropyDensity(T);
 		bulkNS = - (e+p) / (tau*T) * bulkViscosityToEntropyDensity(T);
 
 
-		// quasiparticle model
+	#if (KINETIC == 1)
 		taupi = (e+p) * shearViscosityToEntropyDensity(T) / (T*beta_shear(T));
 		taubulk = (e+p) * bulkViscosityToEntropyDensity(T) / (T*beta_bulk(T));
-
-
-		// m/T << 1 model
-		//taupi = 5.0 * shearViscosityToEntropyDensity(T) / T;
-		//taubulk = bulkViscosityToEntropyDensity(T) / (15.0*T*pow(1.0/3.0-cs2,2));
+	#else
+		taupi = 5.0 * shearViscosityToEntropyDensity(T) / T;
+		taubulk = bulkViscosityToEntropyDensity(T) / (15.0*T*pow(1.0/3.0-cs2,2));
+	#endif
 
 		Beq = equilibriumBquasi(T);
 
@@ -291,13 +232,8 @@ int main()
 
 			piNSplot << setprecision(6) << tau << "\t\t" << sqrt(1.5) * piNS / p << endl;
 			bulkNSplot << setprecision(6) << tau << "\t\t" << bulkNS / p << endl;
-
-			tanhrhoplot << setprecision(6) << tau << "\t\t" << reg << endl;
-
 		}
 	}
-
-
 
 	// close plot data files
 
@@ -315,16 +251,10 @@ int main()
 	Bplot.close();
 	dB2ndplot.close();
 
-
 	piNSplot.close();
 	bulkNSplot.close();
 	tanhrhoplot.close();
 
-
-
-
-	// free memory
-	//printf("Freeing memory...");
 	printf("Done\n\n");
 
 	return 0;
